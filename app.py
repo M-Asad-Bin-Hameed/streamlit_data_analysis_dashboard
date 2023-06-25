@@ -62,9 +62,12 @@ def main():
             graph_to_choose = st.selectbox('Choose the graph type',['Bar','Box','Histogram','Scatter','Line'])
             col1, col2 = st.columns([1,1])
             with col2:
-                x = st.text_input('X-Column')
-                y = st.text_input('Y-Column')
-                color = st.text_input('Column Color')
+                column_list = st.session_state['data_class'].get_column_names()
+                column_list.insert(0,' ')
+                x = st.selectbox('X-Column', column_list) 
+                y = st.selectbox('Y-Column', column_list)
+                
+                color = st.selectbox('Column Color',column_list)
 
             with col1:
                 if st.button('Create graph'):
@@ -78,6 +81,10 @@ def main():
                         exc_type, exc_obj, exc_tb = sys.exc_info()
                         fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
                         col1.error(f'Exception Type = {exc_type}, File Name = {fname}, Line No = {exc_tb.tb_lineno}')
+
+    with tab3:
+        if st.session_state['data_class'] is not None:
+            st.text_input('Enter target column')
 
 if __name__ == '__main__':
     main()

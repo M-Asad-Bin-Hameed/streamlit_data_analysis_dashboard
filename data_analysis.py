@@ -34,13 +34,18 @@ class data_analysis_class:
          return box_plot, hist_plot
 
     def custom_plot(self, graph_name=None, x=None, y=None ,color=None):
-        
+        if color == ' ':
+            color = None
         if graph_name.lower() == 'bar':
              fig = px.bar(self.df, x, y, color)
         elif graph_name.lower() == 'box':
              fig = px.box(self.df, x)
         elif graph_name.lower() == 'histogram':
              fig = px.histogram(self.df, x)
+        elif graph_name.lower() == 'scatter':
+             fig = px.scatter(self.df, x, y, color)
+        elif graph_name.lower() == 'line':
+             fig = px.line(self.df, x, y, color)
         
         return fig
 
