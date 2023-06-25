@@ -4,13 +4,14 @@ import pandas as pd
 import streamlit as st
 from tkinter_folder import folder_select
 from pathlib import Path
-from data_analysis import analyze_data
+from data_analysis import data_analysis_class
 import numpy as np
 import plotly.express as px
 
 if 'directory' not in st.session_state: 
     st.session_state['directory'] = os.path.abspath('.')
     st.session_state['data'] = None
+    st.session_state['data_class'] = None
 st.set_page_config(layout="wide")
 
 
@@ -22,52 +23,61 @@ def side_bar_content():
     st.sidebar.write(st.session_state['directory'])
 
 
-def main():
-    side_bar_content()
+def tab1_content():
     col1, col2 = st.columns([1,1])
     file_selected = col1.selectbox('Select a csv file',
                  os.listdir(st.session_state['directory']))
     if col1.button('Analyze'):
         file_path = Path(st.session_state['directory']) / Path(file_selected)
         try:
-            st.session_state['data'] = pd.read_csv(str(file_path))
+            st.session_state['data_class'] = data_analysis_class(file_path)
         except Exception as e:
 
             col1.error(f"Exception = {e}")
             exc_type, exc_obj, exc_tb = sys.exc_info()
             fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
             col1.error(f'Exception Type = {exc_type}, File Name = {fname}, Line No = {exc_tb.tb_lineno}')
+    if st.session_state['data_class'] is not None:
 
-        # if st.session_state['data'] is not None:
-        #     analyze_data(col1, col2)
+        st.sidebar.markdown('### Column dtypes')
+        st.sidebar.write(st.session_state['data_class'].get_dtypes())
+        with col1.expander('Basic description'):
+            st.session_state['data_class'].describe_data()
+        
+        col2.markdown('### Basic Charts section')
+        with col2.expander('Basic plots'):
+            graph_column = st.selectbox('Column to use',st.session_state['data_class'].get_column_names())
+            box,hist = st.session_state['data_class'].basic_plots(graph_column)
+            st.plotly_chart(box,use_container_width=True)
+            st.plotly_chart(hist,use_container_width=True)
 
-    column_dict = st.session_state['data'].dtypes.to_dict()
-    # with col1.expander('Pair Plot',False):
-    #     sns.pairplot(st.session_state['data'])
-    #     st.pyplot(plt)
-    # fields = []    
-    # for k,v in column_dict.items():
-    #     fields.append(col2.text_input(f'{k}, {v}'))
-    
-    with col1.expander('Describe'):
-        st.write(st.session_state['data'].describe())
-    
-    with col2.expander('Missing values'):
-        st.write(st.session_state['data'].isnull().sum())
-    
-    with col1.expander('Box plot'):
-        column_to_plot = \
-            st.selectbox('Choose column to plot',
-                         st.session_state['data'].select_dtypes(include=np.number).columns.tolist())
-        st.plotly_chart(px.box(st.session_state['data'],column_to_plot),use_container_width=True)
+def main():
+    tab1, tab2, tab3 = st.tabs(["Data Loading", "Custom Graph", "Machine Learning"])
+    with tab1:
+        side_bar_content()
+        tab1_content()
+    with tab2:
+        if st.session_state['data_class'] is not None:
+            st.markdown('# Custom chart')     
+            graph_to_choose = st.selectbox('Choose the graph type',['Bar','Box','Histogram','Scatter','Line'])
+            col1, col2 = st.columns([1,1])
+            with col2:
+                x = st.text_input('X-Column')
+                y = st.text_input('Y-Column')
+                color = st.text_input('Column Color')
 
-    with col2.expander('Histogram'):
-        column_to_plot = \
-            st.selectbox('Choose column to plot',
-                         st.session_state['data'].columns.tolist())
-        st.plotly_chart(px.histogram(st.session_state['data'],column_to_plot),use_container_width=True)
-  
-    with col1.expander('Correlation'):
-        st.plotly_chart(px.imshow(st.session_state['data'].select_dtypes(include=np.number).corr(),text_auto=True),use_container_width=True)
+            with col1:
+                if st.button('Create graph'):
+                    try:
+                        st.plotly_chart(st.session_state['data_class'].custom_plot(graph_to_choose,
+                                                                               x, y, 
+                                                                               color),
+                                                                               use_container_width=True)
+                    except Exception as e:
+                        st.error(f"Exception = {e}")
+                        exc_type, exc_obj, exc_tb = sys.exc_info()
+                        fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+                        col1.error(f'Exception Type = {exc_type}, File Name = {fname}, Line No = {exc_tb.tb_lineno}')
+
 if __name__ == '__main__':
     main()
