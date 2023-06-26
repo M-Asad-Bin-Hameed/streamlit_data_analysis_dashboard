@@ -7,45 +7,76 @@ from matplotlib import pyplot as plt
 
 
 class data_analysis_class:
-    
+
     def __init__(self, file_path) -> None:
             self.df = pd.read_csv(str(file_path))
-            self.df_dtypes =  self.df.dtypes.to_dict()
-    
+
     def get_dtypes(self):
-         return self.df_dtypes
+            return self.df.dtypes.to_dict()
 
     def correlation_heatmap(self):
         fig = px.imshow(self.df.select_dtypes(include=np.number).corr(),text_auto=True)
         return fig
     def describe_data(self):
-         st.markdown('### Data Description: Numeric')
-         st.write(self.df.describe())
-         st.markdown('### Null values')
-         st.write(self.df.isnull().sum().to_dict())
+        st.markdown('### Data Description: Numeric')
+        st.write(self.df.describe())
+        st.markdown('### Null values')
+        st.write(self.df.isnull().sum().to_dict())
 
     def get_column_names(self):
-         return self.df.columns.tolist()
+        return self.df.columns.tolist()
 
     def basic_plots(self, column):
-         box_plot = px.box(self.df,column)
-         hist_plot = px.histogram(self.df,column)
-         
-         return box_plot, hist_plot
+        box_plot = px.box(self.df,column)
+        hist_plot = px.histogram(self.df,column)
+        
+        return box_plot, hist_plot
 
     def custom_plot(self, graph_name=None, x=None, y=None ,color=None):
         if color == ' ':
             color = None
         if graph_name.lower() == 'bar':
-             fig = px.bar(self.df, x, y, color)
+            fig = px.bar(self.df, x, y, color)
         elif graph_name.lower() == 'box':
-             fig = px.box(self.df, x)
+            fig = px.box(self.df, x)
         elif graph_name.lower() == 'histogram':
-             fig = px.histogram(self.df, x)
+            fig = px.histogram(self.df, x)
         elif graph_name.lower() == 'scatter':
-             fig = px.scatter(self.df, x, y, color)
+            fig = px.scatter(self.df, x, y, color)
         elif graph_name.lower() == 'line':
-             fig = px.line(self.df, x, y, color)
-        
+            fig = px.line(self.df, x, y, color)
+        elif graph_name.lower() == 'density heatmap':
+            fig = px.density_heatmap(self.df, x, y,color)
+        elif graph_name.lower() == 'correlation matrix':
+            fig = px.imshow(self.df.select_dtypes(include='number').corr(), text_auto=True)
+
         return fig
 
+    def show_column_info(self, column_name,col1, col2):
+        col_d_type = self.df[column_name].dtype
+        if col_d_type == 'float64' or col_d_type == 'int64':
+            self._for_numerical_dtype(column_name, col1, col2)
+        if col_d_type =='object':
+            col1.write('Please convert the column into a specific type')
+        if col_d_type =='category':
+            self._for_categorical_dtypes(column_name, col1, col2)
+
+    def _for_categorical_dtypes(self,column_name,col1, col2):
+        col1.write('Unique values')
+        col1.write(self.df[column_name].value_counts())
+        col2.plotly_chart(px.histogram(self.df,column_name))
+
+    def _for_numerical_dtype(self,column_name,col1, col2):
+        null_value_count = self.df[column_name].isnull().sum()
+        col1.write(f'Null values = {null_value_count}')
+        if null_value_count>0:
+            if col1.button('Drop nulls'):
+                self.df.dropna(subset=[column_name],inplace=True)
+
+        col1.write('Describe')
+        col1.write(self.df[column_name].describe())
+        col2.plotly_chart(px.histogram(self.df,column_name))
+        col2.plotly_chart(px.box(self.df,column_name))
+
+    def change_dtype(self, column_name, change_to):
+        self.df[column_name] = self.df[column_name].astype(change_to)

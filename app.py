@@ -52,14 +52,37 @@ def tab1_content():
             st.plotly_chart(hist,use_container_width=True)
 
 def main():
-    tab1, tab2, tab3 = st.tabs(["Data Loading", "Custom Graph", "Machine Learning"])
+    tab1, tab2, tab3, tab4 = st.tabs(["Data Loading","Column specific", "Custom Graph", "Machine Learning"])
     with tab1:
         side_bar_content()
         tab1_content()
+    
     with tab2:
+        col2_1, col2_2 = st.columns([1,1])
         if st.session_state['data_class'] is not None:
-            st.markdown('# Custom chart')     
-            graph_to_choose = st.selectbox('Choose the graph type',['Bar','Box','Histogram','Scatter','Line'])
+            tab_3_col = col2_1.selectbox('Choose column',st.session_state['data_class'].get_column_names())
+            tab_3_dtype = col2_2.selectbox('Choose datatype',['int64','float64','object','category','bool'])
+            col2_1.write(f'dtype =  {st.session_state["data_class"].df[tab_3_col].dtype}')
+            col2_1.write(f'Column Preview')
+            col2_1.write(st.session_state['data_class'].df[tab_3_col].head())
+            if col2_2.button('Change dtype'):
+                try:
+                    st.session_state['data_class'].change_dtype(tab_3_col, tab_3_dtype)
+                    st.experimental_rerun()
+                except Exception as e:
+                    st.error(f"Exception = {e}")
+                    exc_type, exc_obj, exc_tb = sys.exc_info()
+                    fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+                    st.error(f'Exception Type = {exc_type}, File Name = {fname}, Line No = {exc_tb.tb_lineno}')
+            
+            if col2_1.button('Show column info'):
+                st.session_state['data_class'].show_column_info(tab_3_col,col2_1,col2_2)
+
+    with tab3:
+        if st.session_state['data_class'] is not None:
+            st.markdown('# Custom chart')
+            graph_choices = ['Bar','Box','Histogram','Scatter','Line','Density Heatmap','Correlation Matrix']
+            graph_to_choose = st.selectbox('Choose the graph type',graph_choices)
             col1, col2 = st.columns([1,1])
             with col2:
                 column_list = st.session_state['data_class'].get_column_names()
@@ -82,7 +105,8 @@ def main():
                         fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
                         col1.error(f'Exception Type = {exc_type}, File Name = {fname}, Line No = {exc_tb.tb_lineno}')
 
-    with tab3:
+
+    with tab4:
         if st.session_state['data_class'] is not None:
             st.text_input('Enter target column')
 
