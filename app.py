@@ -58,16 +58,20 @@ def main():
         tab1_content()
     
     with tab2:
+        date_time_format = None
         col2_1, col2_2 = st.columns([1,1])
         if st.session_state['data_class'] is not None:
             tab_3_col = col2_1.selectbox('Choose column',st.session_state['data_class'].get_column_names())
-            tab_3_dtype = col2_2.selectbox('Choose datatype',['int64','float64','object','category','bool'])
+            tab_3_dtype = \
+                col2_2.selectbox('Choose datatype',['int64','float64','object','category','datetime64','bool'])
             col2_1.write(f'dtype =  {st.session_state["data_class"].df[tab_3_col].dtype}')
             col2_1.write(f'Column Preview')
             col2_1.write(st.session_state['data_class'].df[tab_3_col].head())
+            if tab_3_dtype == 'datetime64':
+                date_time_format = col2_2.text_input('Write your column format e.g. %Y')
             if col2_2.button('Change dtype'):
                 try:
-                    st.session_state['data_class'].change_dtype(tab_3_col, tab_3_dtype)
+                    st.session_state['data_class'].change_dtype(tab_3_col, tab_3_dtype, date_time_format)
                     st.experimental_rerun()
                 except Exception as e:
                     st.error(f"Exception = {e}")
