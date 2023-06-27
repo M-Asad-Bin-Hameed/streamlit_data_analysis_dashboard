@@ -56,6 +56,10 @@ def main():
     with tab1:
         side_bar_content()
         tab1_content()
+
+##############################################################################################
+############################### C O L U M N   S P E C I F I C ################################
+##############################################################################################
     
     with tab2:
         date_time_format = None
@@ -81,6 +85,10 @@ def main():
             
             if col2_1.button('Show column info'):
                 st.session_state['data_class'].show_column_info(tab_3_col,col2_1,col2_2)
+
+    ##############################################################################################
+    ##################################### C U S T O M P L O T S ##################################
+    ##############################################################################################
 
     with tab3:
         if st.session_state['data_class'] is not None:
@@ -109,10 +117,26 @@ def main():
                         fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
                         col1.error(f'Exception Type = {exc_type}, File Name = {fname}, Line No = {exc_tb.tb_lineno}')
 
+    ##############################################################################################
+    ############################### M A C H I N E  L E A R N I N G ###############################
+    ##############################################################################################
 
     with tab4:
         if st.session_state['data_class'] is not None:
-            st.text_input('Enter target column')
+            col4_1,col4_2 = st.columns([1,1])
+            
+            target_column = \
+                col4_1.selectbox('Choose target column',
+                                 st.session_state['data_class'].get_column_names())
+            test_size = col4_1.number_input('Choose test set size',min_value=0.0,
+                                            max_value=0.9,step=0.1)
+            problem_type = col4_2.selectbox('Select problem type',['Regression','Classification'])
+
+            if problem_type == 'Regression':
+                model_list = ['Linear Regression','SVM','Random Forest Regressor']
+            else:
+                model_list = ['Logistic Regression','SVC','Random Forest Classifier']
+            col4_2.selectbox('Choose model',model_list)
 
 if __name__ == '__main__':
     main()

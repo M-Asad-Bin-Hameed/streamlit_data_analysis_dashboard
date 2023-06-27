@@ -121,3 +121,12 @@ class data_analysis_class:
             self.df[column_name] = pd.to_datetime(self.df[column_name],format=date_time_format)
         else:
             self.df[column_name] = self.df[column_name].astype(change_to)
+
+
+##############################################################################################
+############################### M A C H I N E  L E A R N I N G ###############################
+##############################################################################################
+
+
+    def split_data(self, test_size=0.2):
+        pass 
