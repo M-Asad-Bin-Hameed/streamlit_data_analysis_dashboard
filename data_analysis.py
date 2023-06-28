@@ -140,12 +140,11 @@ class data_analysis_class:
         )
     def auto_ml_run(self):
         self.automl = AutoML(
-                        hill_climbing_steps=1,
                         algorithms = ['Random Forest', 'CatBoost', 'Neural Network'],
                         explain_level=2,
                         top_models_to_improve=3
                     )
-        st.write('Running AutoML')
+        st.write('Running AutoML, This may take a few minutes')
         t1 = time.time()
         self.automl.fit(self.X_train, self.y_train)
         self.predictions = self.automl.predict_all(self.X_test)
