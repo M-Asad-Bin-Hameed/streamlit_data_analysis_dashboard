@@ -52,7 +52,7 @@ def tab1_content():
             st.plotly_chart(hist,use_container_width=True)
 
 def main():
-    tab1, tab2, tab3, tab4 = st.tabs(["Data Loading","Column specific", "Custom Graph", "Machine Learning"])
+    tab1, tab2, tab3, tab4 = st.tabs(["Data Loading","Column specific", "Custom Graph", "Auto Machine Learning"])
     with tab1:
         side_bar_content()
         tab1_content()
@@ -123,20 +123,31 @@ def main():
 
     with tab4:
         if st.session_state['data_class'] is not None:
-            col4_1,col4_2 = st.columns([1,1])
+            # col4_1,col4_2 = st.columns([1,1])
             
             target_column = \
-                col4_1.selectbox('Choose target column',
+                st.selectbox('Choose target column',
                                  st.session_state['data_class'].get_column_names())
-            test_size = col4_1.number_input('Choose test set size',min_value=0.0,
+            test_size = st.number_input('Choose test set size',min_value=0.1,
                                             max_value=0.9,step=0.1)
-            problem_type = col4_2.selectbox('Select problem type',['Regression','Classification'])
+            
+            if st.button('Perform AutoML'):
+                st.session_state['data_class'].split_data(test_size,target_column)
+                st.session_state['data_class'].auto_ml_run()
+            
+            if st.button('Show best predictions'):
+                st.session_state['data_class'].show_predictions()
 
-            if problem_type == 'Regression':
-                model_list = ['Linear Regression','SVM','Random Forest Regressor']
-            else:
-                model_list = ['Logistic Regression','SVC','Random Forest Classifier']
-            col4_2.selectbox('Choose model',model_list)
+            if st.button('Show AutoML results'):
+                st.session_state['data_class'].show_automl_results()
+            # problem_type = col4_2.selectbox('Select problem type',['Regression','Classification'])
 
+            # if problem_type == 'Regression':
+            #     model_list = ['Linear Regression','SVM','Random Forest Regressor']
+            # else:
+            #     model_list = ['Logistic Regression','SVC','Random Forest Classifier']
+            # col4_2.selectbox('Choose model',model_list)
+
+    
 if __name__ == '__main__':
     main()

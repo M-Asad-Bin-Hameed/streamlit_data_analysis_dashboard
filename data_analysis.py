@@ -1,16 +1,23 @@
-import pandas as pd
-import plotly.express as px
-import streamlit as st
-import seaborn as sns
+import os
+import glob
+import time
 import numpy as np
+import pandas as pd
+import streamlit as st
+from pathlib import Path
+import plotly.express as px
 import plotly.figure_factory as ff
+from supervised.automl import AutoML
 from matplotlib import pyplot as plt
+from sklearn.model_selection import train_test_split
 
 
 class data_analysis_class:
 
     def __init__(self, file_path) -> None:
             self.df = pd.read_csv(str(file_path))
+            self.automl = None
+            self.predictions = None
 
     def get_dtypes(self):
             return self.df.dtypes.to_dict()
@@ -30,7 +37,6 @@ class data_analysis_class:
     def basic_plots(self, column):
         box_plot = px.box(self.df,column)
         hist_plot = px.histogram(self.df,column)
-        
         return box_plot, hist_plot
 
     def custom_plot(self, graph_name=None, x=None, y=None ,color=None):
@@ -124,9 +130,71 @@ class data_analysis_class:
 
 
 ##############################################################################################
-############################### M A C H I N E  L E A R N I N G ###############################
+################################## A U T O M L  (M L J A R) ##################################
 ##############################################################################################
 
 
-    def split_data(self, test_size=0.2):
-        pass 
+    def split_data(self, test_size=0.2, column_name=None):
+        self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(
+            self.df.drop(columns=column_name), self.df[column_name], test_size=test_size
+        )
+    def auto_ml_run(self):
+        self.automl = AutoML(
+                        hill_climbing_steps=1,
+                        algorithms = ['Random Forest', 'CatBoost', 'Neural Network'],
+                        explain_level=2,
+                        top_models_to_improve=3
+                    )
+        st.write('Running AutoML')
+        t1 = time.time()
+        self.automl.fit(self.X_train, self.y_train)
+        self.predictions = self.automl.predict_all(self.X_test)
+        self.predictions['Ground_truth'] = self.y_test.reset_index(drop=True)
+        st.success(f'Done in {round(time.time()- t1,3) }s')
+    def show_automl_results(self,result_path = None):
+        
+        if result_path is None:
+            if self.automl is None:
+                st.error('AutoML not run or found')
+                return
+            self.result_path =  self.automl._get_results_path()
+        else:
+            self.result_path = result_path
+
+        directories = next(os.walk(self.result_path))[1]
+
+        for file in glob.glob(f'{str(Path(self.result_path)/Path("*.csv"))}'):
+            with st.expander('LeaderBoard'):
+                st.write(pd.read_csv(file))
+        with st.expander('Model Comparison files'):
+            col1,col2 = st.columns([1,1])
+            count = 0
+            for image in glob.glob(f'{str(Path(self.result_path)/Path("*.png"))}'):
+                if count%2==0:
+                    col1.markdown(f'### {os.path.splitext((os.path.basename(image)))[0]}')
+                    col1.image(image)
+                else:
+                    col2.markdown(f'### {os.path.splitext((os.path.basename(image)))[0]}')
+                    col2.image(image)
+                count+=1
+        directory_dict = {}
+        for x in directories:
+            directory_dict[x] = glob.glob(f'{str(Path(self.result_path) / Path(x))/Path("*.png")}')
+        for directory,file_list in directory_dict.items():
+            count = 0
+            with st.expander(directory):
+                col1, col2 = st.columns([1,1])
+                for file in file_list:
+                    if count%2 == 0:
+                        col1.markdown(f'### {os.path.splitext((os.path.basename(file)))[0]}')
+                        col1.image(file)
+                    else:
+                        col2.write(f'### {os.path.splitext((os.path.basename(file)))[0]}')
+                        col2.image(file)
+                    count+=1
+
+    def show_predictions(self):
+        if self.predictions is None:
+            st.error('No AutoML model found')
+        else:
+            st.write(self.predictions)
