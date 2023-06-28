@@ -1,4 +1,4 @@
-# Streamlit Data Analysis Dashboard
+# Streamlit Basic Data Analysis Dashboard
 
 ## Introduction
 
@@ -7,3 +7,4 @@
 - Can make some graphs
 - Can run AUTOML through MLJAR library
 - Can look at individual columns
+- Only supports csv files
