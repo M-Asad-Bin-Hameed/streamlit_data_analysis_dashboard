@@ -57,8 +57,7 @@ def tab1_content():
         with st.expander('Pandas Profile Report'):
             ppr = st.button('Create pandas profile report')
             ts_mode = st.checkbox('Time series data?')
-            if ppr:
-                st.session_state['data_class'].pandas_profile_report(ts_mode)
+            st.session_state['data_class'].pandas_profile_report(ppr,ts_mode)
 
 
 def main():

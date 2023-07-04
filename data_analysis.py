@@ -22,10 +22,10 @@ class data_analysis_class:
             self.predictions = None
             self.profile_report = None
 
-    def pandas_profile_report(self,tsmode):
+    def pandas_profile_report(self, generate_report, tsmode):
         if self.profile_report is not None:
             st_profile_report(self.profile_report)
-        else:
+        if generate_report:
             self.profile_report = ProfileReport(self.df, tsmode=tsmode)
             st_profile_report(self.profile_report)
 
