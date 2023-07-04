@@ -119,7 +119,7 @@ class data_analysis_class:
         col2.write('Box plot')
         col2.plotly_chart(px.box(self.df,column_name))
         col1.write('Dist plot')
-        col1.plotly_chart(ff.create_distplot([self.df[column_name]],[column_name]))
+        col1.plotly_chart(ff.create_distplot([self.df[column_name].dropna()],[column_name]))
 
     def change_dtype(self, column_name, change_to, date_time_format = None):
         print(date_time_format)
