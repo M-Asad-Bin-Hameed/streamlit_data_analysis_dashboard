@@ -10,6 +10,8 @@ import plotly.figure_factory as ff
 from supervised.automl import AutoML
 from matplotlib import pyplot as plt
 from sklearn.model_selection import train_test_split
+from pandas_profiling import ProfileReport
+from streamlit_pandas_profiling import st_profile_report
 
 
 class data_analysis_class:
@@ -18,13 +20,22 @@ class data_analysis_class:
             self.df = pd.read_csv(str(file_path))
             self.automl = None
             self.predictions = None
+            self.profile_report = None
+
+    def pandas_profile_report(self,tsmode):
+        if self.profile_report is not None:
+            st_profile_report(self.profile_report)
+        else:
+            self.profile_report = ProfileReport(self.df, tsmode=tsmode)
+            st_profile_report(self.profile_report)
 
     def get_dtypes(self):
             return self.df.dtypes.to_dict()
 
     def correlation_heatmap(self):
-        fig = px.imshow(self.df.select_dtypes(include=np.number).corr(),text_auto=True)
+        fig = px.imshow(self.df.select_dtypes(include=np.number).corr(),text_auto='.2f')
         return fig
+
     def describe_data(self):
         st.markdown('### Data Description: Numeric')
         st.write(self.df.describe())

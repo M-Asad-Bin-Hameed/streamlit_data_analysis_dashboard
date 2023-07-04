@@ -41,15 +41,25 @@ def tab1_content():
 
         st.sidebar.markdown('### Column dtypes')
         st.sidebar.write(st.session_state['data_class'].get_dtypes())
+
         with col1.expander('Basic description'):
             st.session_state['data_class'].describe_data()
-        
+
+        with col1.expander('Correlation matrix'):
+            st.plotly_chart(st.session_state['data_class'].correlation_heatmap())
         col2.markdown('### Basic Charts section')
         with col2.expander('Basic plots'):
             graph_column = st.selectbox('Column to use',st.session_state['data_class'].get_column_names())
             box,hist = st.session_state['data_class'].basic_plots(graph_column)
             st.plotly_chart(box,use_container_width=True)
             st.plotly_chart(hist,use_container_width=True)
+
+        with st.expander('Pandas Profile Report'):
+            ppr = st.button('Create pandas profile report')
+            ts_mode = st.checkbox('Time series data?')
+            if ppr:
+                st.session_state['data_class'].pandas_profile_report(ts_mode)
+
 
 def main():
     tab1, tab2, tab3, tab4 = st.tabs(["Data Loading","Column specific", "Custom Graph", "Auto Machine Learning"])
